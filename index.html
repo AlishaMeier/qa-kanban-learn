@@ -10,8 +10,8 @@
   <title>QA Automation Kanban Tracker</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom, #1a1a1a, #ffebf0);
+      font-family: 'Nunito', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #fce4ec, #e1bee7, #b2ebf2);
       margin: 0;
       padding: 20px;
       color: #2c2c2c;
@@ -133,36 +133,48 @@
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
+  <audio id="dragSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_58d20b4be5.mp3"></audio></audio>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body background-size: cover; background-attachment: fixed;">
   <div class="header-img">
-    <img src="https://media.tenor.com/nmXJwmiIL7MAAAAi/chi-kitten.gif" alt="Chi Kitten">
-    <img src="https://i.pinimg.com/originals/6b/c6/1d/6bc61df7d4aaf79ac86942f2ec9b3a63.gif" alt="Anime Girl" style="margin-left: 15px;">
+    <img src="https://i.gifer.com/9P3h.gif" alt="Chi Anime" style="border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.2); max-height:200px;">
+    
   </div>
 
-  <form id="taskForm">
-    <input type="text" id="title" placeholder="Название модуля" required>
-    <textarea id="description" placeholder="Описание или комментарий..."></textarea>
-    <input type="url" id="link" placeholder="Ссылка на материал (необязательно)">
-    <select id="column">
-      <option value="inProgress">🚧 В процессе</option>
-      <option value="todo">📝 План</option>
-      <option value="done">✅ Готово</option>
-    </select>
-    <button type="submit">📌 Добавить модуль</button>
-  </form>
+  <button onclick="document.getElementById('modal').style.display='block'" style="display: block; margin: 0 auto 20px; padding: 10px 20px; font-size: 1em; border-radius: 6px; background: #f06292; color: white; border: none; cursor: pointer;">➕ Добавить модуль</button>
+
+  <div id="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center; font-family:'Nunito', sans-serif;" onclick="if(event.target === this) this.style.display='none'">
+    <div style="background:#fff0f5; max-width:500px; margin:10% auto; padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-family: 'Nunito', 'Segoe UI', sans-serif;">
+      <h2 style="text-align:center;">📌 Новый модуль</h2>
+      <form id="taskForm" style="font-family:'Nunito', sans-serif;">
+        <input type="text" id="title" placeholder="Название модуля" required>
+        <textarea id="description" placeholder="Описание или комментарий..."></textarea>
+        <input type="url" id="link" placeholder="Ссылка на материал (необязательно)">
+        <input type="date" id="deadline" placeholder="Дедлайн">
+        <input type="number" id="estimate" placeholder="Оценка времени (часы)" min="1">
+        <select id="column">
+          <option value="inProgress">🚧 In Progress</option>
+          <option value="todo">📥 Backlog</option>
+          <option value="done">✅ Done</option>
+        </select>
+        <button type="submit">Добавить</button>
+        <button type="button" onclick="document.getElementById('modal').style.display='none'" style="margin-top:10px; background:#999;">Отмена</button>
+      </form>
+    </div>
+  </div>
 
   <button id="saveBtn">💾 Сохранить в браузере</button>
 
   <div class="kanban">
     <div class="column" id="todo">
-      <h2>📝 План</h2>
+      <h2>📥 Backlog</h2>
     </div>
     <div class="column" id="inProgress">
-      <h2>🚧 В процессе</h2>
+      <h2>⚙️ In Progress</h2>
     </div>
     <div class="column" id="done">
-      <h2>✅ Готово</h2>
+      <h2>✅ Done</h2>
     </div>
   </div>
 
@@ -181,11 +193,25 @@
     const saveBtn = document.getElementById('saveBtn');
 
     let tasks = JSON.parse(localStorage.getItem('qaKanbanTasks')) || [
-      { id: 1, title: 'BDD + Gherkin + Behave', description: 'Пишем автотесты в стиле Given-When-Then', link: 'https://behave.readthedocs.io/en/stable/', status: 'todo' },
-      { id: 2, title: 'Test Design Techniques', description: 'Классы эквивалентности, граничные значения и др.', link: 'https://testautomationu.applitools.com/test-design/', status: 'todo' },
-      { id: 3, title: 'Mock / Stub сервисы', description: 'Работа с фейковыми API и Postman mock servers', link: 'https://learning.postman.com/docs/designing-and-developing-your-api/mocking-data/setting-up-mock/', status: 'todo' },
-      { id: 4, title: 'QA Guru финальный проект', description: 'Реальный проект с API + UI + CI/CD + Allure', link: 'https://qaguru.ru/', status: 'inProgress' }
-    ];
+  { id: 1, title: 'Переменные и типы данных', description: 'int, str, float, bool, None, type(), isinstance()', status: 'todo' },
+  { id: 2, title: 'Условные операторы', description: 'if, elif, else, тернарные выражения', status: 'todo' },
+  { id: 3, title: 'Циклы', description: 'for, while, break, continue, range()', status: 'todo' },
+  { id: 4, title: 'Функции', description: 'def, return, параметры, аргументы, *args, **kwargs', status: 'todo' },
+  { id: 5, title: 'Списки и словари', description: '[].append(), [].pop(), {}, dict.get(), dict.items()', status: 'todo' },
+  { id: 6, title: 'Обработка ошибок', description: 'try, except, finally, raise', status: 'todo' },
+  { id: 7, title: 'Работа с файлами', description: 'open, read, write, with open', status: 'todo' },
+  { id: 8, title: 'Импорт и структура', description: 'import, from ... import, __init__.py, модули', status: 'todo' },
+  { id: 9, title: 'Основы Pytest', description: 'test-функции, assert, структура, запуск', status: 'todo' },
+  { id: 10, title: 'Фикстуры и параметры', description: 'pytest.fixture, scope, parametrize', status: 'todo' },
+  { id: 11, title: 'Page Object в Python', description: 'структура, классы, методы страниц', status: 'todo' },
+  { id: 12, title: 'Playwright Python', description: 'установка, launch, selectors, wait', status: 'todo' },
+  { id: 13, title: 'Selene', description: 'селекторы, действия, ожидания', status: 'todo' },
+  { id: 14, title: 'Allure Reports', description: 'установка, декораторы, генерация отчётов', status: 'todo' },
+  { id: 15, title: 'Git и GitHub', description: 'clone, push, pull, ветки, PR', status: 'todo' },
+  { id: 16, title: 'GitLab CI/CD', description: '.gitlab-ci.yml, пайплайны, тест раннер', status: 'todo' },
+  { id: 17, title: 'Jenkins', description: 'pipelines, build steps, интеграция', status: 'todo' },
+  { id: 18, title: 'Проект QA.Guru', description: 'финальная сборка, UI + API + CI + Allure', status: 'todo' }
+];
 
     let idCounter = tasks.length + 1;
 
@@ -194,18 +220,37 @@
       tasks.forEach(task => {
         const el = document.createElement('div');
         el.className = 'task';
+        const deadlineDate = task.deadline ? new Date(task.deadline) : null;
+        const now = new Date();
+        if (deadlineDate && deadlineDate < now) {
+          el.style.borderLeft = '5px solid #ff1744'; // красный — просрочено
+        } else if (deadlineDate && (deadlineDate - now) / (1000 * 60 * 60 * 24) < 2) {
+          el.style.borderLeft = '5px solid #ff9800'; // оранжевый — дедлайн близко
+        } else {
+          el.style.borderLeft = '5px solid #f06292'; // розовый — норм
+        }
         el.draggable = true;
         el.dataset.id = task.id;
+        let animeIcon = '';
+        if (task.status === 'todo') animeIcon = 'https://i.gifer.com/Pvxu.gif';
+        else if (task.status === 'inProgress') animeIcon = 'https://i.gifer.com/9P3h.gif';
+        else if (task.status === 'done') animeIcon = 'https://i.gifer.com/OiwA.gif';
         el.innerHTML = `
+          <img src="${animeIcon}" alt="anime icon" style="width:32px;height:32px;float:left;margin-right:8px;border-radius:50%;">
           <div><strong contenteditable="true" onblur="editTitle(${task.id}, this.innerText)">${task.title}</strong></div>
           <div><textarea rows="2" onblur="editDescription(${task.id}, this.value)">${task.description}</textarea></div>
           ${task.link ? `<a href="${task.link}" target="_blank">🔗 Ссылка</a>` : ''}
+          ${task.deadline ? `<div>📅 Deadline: <strong>${task.deadline}</strong></div>` : ''}
+          ${task.estimate ? `<div>⏱ ${task.estimate} ч.</div>` : ''}
           <div class="actions">
             <button onclick="deleteTask(${task.id})">🗑️</button>
           </div>
         `;
         columns[task.status].appendChild(el);
-        el.addEventListener('dragstart', dragStart);
+        el.addEventListener('dragstart', e => {
+          dragStart(e);
+          const sound = document.getElementById('dragSound'); if (sound) { sound.currentTime = 0; sound.play().catch(e => {}); }
+        });
       });
       saveToStorage();
     }
@@ -249,8 +294,11 @@
       const description = document.getElementById('description').value;
       const link = document.getElementById('link').value;
       const column = document.getElementById('column').value;
-      tasks.push({ id: idCounter++, title, description, link, status: column });
+      const deadline = document.getElementById('deadline').value;
+      const estimate = document.getElementById('estimate').value;
+      tasks.push({ id: idCounter++, title, description, link, deadline, estimate, status: column });
       form.reset();
+document.getElementById('modal').style.display = 'none';
       renderTasks();
     });
 
@@ -261,5 +309,6 @@
 
     renderTasks();
   </script>
+<iframe width="0" height="0" src="https://www.youtube.com/embed/lTRiuFIWV54?autoplay=1&loop=1&playlist=lTRiuFIWV54" frameborder="0" allow="autoplay" allowfullscreen style="display:none;"></iframe>
 </body>
 </html>
