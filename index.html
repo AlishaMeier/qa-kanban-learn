@@ -9,13 +9,162 @@
   <link rel="apple-touch-icon" href="icon.png">
   <title>QA Automation Kanban Tracker</title>
   <style>
-    /* Стили остаются без изменений */
-    /* ... все стили как раньше ... */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #1a1a1a, #ffebf0);
+      margin: 0;
+      padding: 20px;
+      color: #2c2c2c;
+    }
+    h1 {
+      text-align: center;
+      color: #ffb6c1;
+      font-size: 2.2em;
+      margin-bottom: 30px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    .header-img {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .header-img img {
+      max-width: 200px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      animation: fadeIn 2s ease-in-out;
+    }
+    .kanban {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .column {
+      background: #fff0f5;
+      border-radius: 12px;
+      padding: 15px;
+      width: 30%;
+      min-width: 280px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease-in-out;
+    }
+    .column:hover {
+      transform: scale(1.01);
+    }
+    .column h2 {
+      text-align: center;
+      color: #4a4a4a;
+    }
+    .task {
+      background: #fff;
+      border-left: 5px solid #f06292;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: grab;
+      position: relative;
+      transition: background 0.3s ease;
+    }
+    .task:hover {
+      background: #ffe4ec;
+    }
+    .task .actions {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      display: flex;
+      gap: 5px;
+    }
+    .task button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .task input, .task textarea {
+      width: 100%;
+      border: none;
+      background: transparent;
+      resize: none;
+      font-size: 0.95em;
+    }
+    #taskForm {
+      background: #fff0f5;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    #taskForm input, #taskForm textarea, #taskForm select, #taskForm button {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1em;
+    }
+    #taskForm button {
+      background-color: #f06292;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    #taskForm button:hover {
+      background-color: #ec407a;
+    }
+    #saveBtn {
+      display: block;
+      margin: 0 auto 30px auto;
+      padding: 10px 20px;
+      background: #2c2c2c;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    #saveBtn:hover {
+      background: #1f1f1f;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
-  <!-- Весь HTML-контент без изменений -->
-  <!-- ... -->
+  <div class="header-img">
+    <img src="https://media.tenor.com/nmXJwmiIL7MAAAAi/chi-kitten.gif" alt="Chi Kitten">
+    <img src="https://i.pinimg.com/originals/6b/c6/1d/6bc61df7d4aaf79ac86942f2ec9b3a63.gif" alt="Anime Girl" style="margin-left: 15px;">
+  </div>
+
+  <form id="taskForm">
+    <input type="text" id="title" placeholder="Название модуля" required>
+    <textarea id="description" placeholder="Описание или комментарий..."></textarea>
+    <input type="url" id="link" placeholder="Ссылка на материал (необязательно)">
+    <select id="column">
+      <option value="inProgress">🚧 В процессе</option>
+      <option value="todo">📝 План</option>
+      <option value="done">✅ Готово</option>
+    </select>
+    <button type="submit">📌 Добавить модуль</button>
+  </form>
+
+  <button id="saveBtn">💾 Сохранить в браузере</button>
+
+  <div class="kanban">
+    <div class="column" id="todo">
+      <h2>📝 План</h2>
+    </div>
+    <div class="column" id="inProgress">
+      <h2>🚧 В процессе</h2>
+    </div>
+    <div class="column" id="done">
+      <h2>✅ Готово</h2>
+    </div>
+  </div>
 
   <script>
     // Сохраняем в localStorage при любых изменениях задач (auto-sync)
