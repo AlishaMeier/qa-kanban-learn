@@ -9,205 +9,169 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <style>
-    body {
-      font-family: 'Nunito', sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: linear-gradient(135deg, #fce4ec, #e1bee7, #b2ebf2);
-      background-size: cover;
-      background-attachment: fixed;
-    }
-    h1 {
-      text-align: center;
-      color: #f06292;
-    }
-    .header-img {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    .header-img img {
-      max-width: 200px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .kanban {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .column {
-      background: #fff0f5;
-      border-radius: 10px;
-      padding: 10px;
-      width: 300px;
-      min-height: 200px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      position: relative;
-    }
-    .column.drag-over {
-      border: 2px dashed violet;
-    }
-    .task {
-      background: white;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 6px;
-      border-left: 5px solid #f06292;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      position: relative;
-    }
-    .task.dragging {
-      opacity: 0.5;
-      transform: rotate(2deg);
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    }
-    .add-task-form input,
-    .add-task-form textarea,
-    .add-task-form button {
-      display: block;
-      width: 100%;
-      margin: 5px 0;
-      padding: 8px;
-      font-family: inherit;
-      font-size: 1em;
-      box-sizing: border-box;
-    }
-    .add-task-form button {
-      background: #f06292;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .actions {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-    }
-    .heart {
-      position: fixed;
-      top: -10px;
-      font-size: 16px;
-      animation: fall 8s linear infinite;
-      background: linear-gradient(45deg, #f8bbd0, #b2ebf2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      pointer-events: none;
-    }
-    @keyframes fall {
-      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-    }
-    .readonly .add-task-form,
-    .readonly .actions,
-    .readonly [draggable="true"] {
-      display: none !important;
-    }
-    #login-container {
-      max-width: 300px;
-      margin: 50px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    #login-container input {
-      width: calc(100% - 20px);
-      margin: 10px 0;
-      padding: 10px;
-      box-sizing: border-box;
-    }
-    #login-container button {
-      padding: 10px 20px;
-      background: #f06292;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>/* Стили как в текущем документе */</style>
   <audio id="dropSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_58d20b4be5.mp3?filename=pop-94319.mp3"></audio>
 </head>
 <body>
+  <div class="header-img">
+    <img src="https://i.gifer.com/9P3h.gif" alt="Chi Anime">
+  </div>
+  <h1>QA Kanban learning</h1>
   <div id="login-container">
-    <h2>Вход</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Пароль">
+    <input type="password" id="password" placeholder="Введите пароль">
     <button onclick="login()">Войти</button>
-    <button onclick="guestAccess()">Я гость</button>
+    <button onclick="enterAsGuest()">Я гость</button>
   </div>
-
-  <div id="app" style="display:none">
-    <h1>QA Kanban learning</h1>
-    <div class="header-img">
-      <img src="https://i.gifer.com/9P3h.gif" alt="Chi Anime">
+  <div class="kanban" style="display:none">
+    <div class="column" id="todo">
+      <h2>📥 Backlog</h2>
+      <form class="add-task-form">
+        <input type="text" placeholder="Заголовок" required>
+        <textarea placeholder="Описание"></textarea>
+        <button type="submit">Добавить</button>
+      </form>
     </div>
-    <div class="kanban">
-      <div class="column" id="todo">
-        <h2>📥 Backlog</h2>
-        <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
-          <input type="text" class="task-title" placeholder="Заголовок">
-          <textarea class="task-desc" placeholder="Описание"></textarea>
-          <button type="submit">Добавить</button>
-        </form>
-      </div>
-      <div class="column" id="inProgress">
-        <h2>🚧 In Progress</h2>
-        <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
-          <input type="text" class="task-title" placeholder="Заголовок">
-          <textarea class="task-desc" placeholder="Описание"></textarea>
-          <button type="submit">Добавить</button>
-        </form>
-      </div>
-      <div class="column" id="done">
-        <h2>✅ Done</h2>
-        <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
-          <input type="text" class="task-title" placeholder="Заголовок">
-          <textarea class="task-desc" placeholder="Описание"></textarea>
-          <button type="submit">Добавить</button>
-        </form>
-      </div>
+    <div class="column" id="inProgress">
+      <h2>🚧 In Progress</h2>
+      <form class="add-task-form">
+        <input type="text" placeholder="Заголовок" required>
+        <textarea placeholder="Описание"></textarea>
+        <button type="submit">Добавить</button>
+      </form>
+    </div>
+    <div class="column" id="done">
+      <h2>✅ Done</h2>
+      <form class="add-task-form">
+        <input type="text" placeholder="Заголовок" required>
+        <textarea placeholder="Описание"></textarea>
+        <button type="submit">Добавить</button>
+      </form>
     </div>
   </div>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDyuj-U-9_1YRywYdOMWPzY1iYdNXUm22w",
       authDomain: "qa-kanban.firebaseapp.com",
       projectId: "qa-kanban",
-      storageBucket: "qa-kanban.firebasestorage.app",
+      storageBucket: "qa-kanban.appspot.com",
       messagingSenderId: "1048329783698",
       appId: "1:1048329783698:web:31121f94345cf70a1b994b",
       measurementId: "G-RDRWM37YW4"
     };
-
     firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById('login-container').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-      }
-    });
+    const passwordInput = document.getElementById('password');
+    const loginContainer = document.getElementById('login-container');
+    const kanbanBoard = document.querySelector('.kanban');
+    let isReadonly = true;
 
     function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      firebase.auth().signInWithEmailAndPassword(email, password)
-        .catch(err => alert('Ошибка входа: ' + err.message));
+      const pwd = passwordInput.value.trim();
+      if (pwd === 'HeyDude6996)') {
+        isReadonly = false;
+        startApp();
+      } else {
+        alert('Неверный пароль');
+      }
     }
 
-    function guestAccess() {
-      document.getElementById('login-container').style.display = 'none';
-      const app = document.getElementById('app');
-      app.style.display = 'block';
-      app.classList.add('readonly');
+    function enterAsGuest() {
+      isReadonly = true;
+      startApp();
     }
+
+    function startApp() {
+      loginContainer.style.display = 'none';
+      kanbanBoard.style.display = 'flex';
+      if (isReadonly) {
+        document.body.classList.add('readonly');
+      }
+      initBoard();
+    }
+
+    function initBoard() {
+      db.collection("tasks").onSnapshot(snapshot => {
+        const data = {};
+        snapshot.forEach(doc => {
+          const task = doc.data();
+          if (!data[task.status]) data[task.status] = [];
+          data[task.status].push({ ...task, id: doc.id });
+        });
+        renderBoard(data);
+      });
+
+      document.querySelectorAll('.add-task-form').forEach(form => {
+        form.addEventListener('submit', e => {
+          e.preventDefault();
+          if (isReadonly) return;
+          const title = form.querySelector('input').value.trim();
+          const description = form.querySelector('textarea').value.trim();
+          const status = form.closest('.column').id;
+          db.collection("tasks").add({ title, description, status });
+          form.reset();
+        });
+      });
+    }
+
+    function renderBoard(data) {
+      document.querySelectorAll('.column').forEach(col => {
+        const id = col.id;
+        col.querySelectorAll('.task').forEach(task => task.remove());
+        const tasks = data[id] || [];
+        tasks.forEach(task => {
+          const div = document.createElement('div');
+          div.className = 'task';
+          div.setAttribute('draggable', true);
+          div.innerHTML = `
+            <strong>${task.title}</strong><br>
+            <span>${task.description}</span>
+            ${!isReadonly ? `<div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div>` : ''}`;
+          col.appendChild(div);
+
+          if (!isReadonly) {
+            div.addEventListener('dragstart', () => div.classList.add('dragging'));
+            div.addEventListener('dragend', () => div.classList.remove('dragging'));
+          }
+        });
+      });
+      setupDnD();
+    }
+
+    function deleteTask(id) {
+      if (isReadonly) return;
+      db.collection("tasks").doc(id).delete();
+    }
+
+    function setupDnD() {
+      const columns = document.querySelectorAll('.column');
+      columns.forEach(col => {
+        col.addEventListener('dragover', e => e.preventDefault());
+        col.addEventListener('dragenter', () => col.classList.add('drag-over'));
+        col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+        col.addEventListener('drop', e => {
+          col.classList.remove('drag-over');
+          const dragging = document.querySelector('.dragging');
+          if (dragging && !isReadonly) {
+            const id = dragging.querySelector('.actions button').getAttribute('onclick').match(/'(.*?)'/)[1];
+            db.collection("tasks").doc(id).update({ status: col.id });
+            const dropSound = document.getElementById('dropSound');
+            if (dropSound) dropSound.play().catch(()=>{});
+          }
+        });
+      });
+    }
+
+    setInterval(() => {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.innerText = '💜';
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.fontSize = (10 + Math.random() * 10) + 'px';
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 8000);
+    }, 800);
   </script>
 </body>
 </html>
