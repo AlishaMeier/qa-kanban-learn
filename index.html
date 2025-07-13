@@ -275,8 +275,10 @@
             <span>${task.description}</span>
             ${!isReadonly ? `<div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div>` : ''}
           `;
-          div.addEventListener('dragstart', () => div.classList.add('dragging'));
-          div.addEventListener('dragend', () => div.classList.remove('dragging'));
+          if (!isReadonly) {
+            div.addEventListener('dragstart', () => div.classList.add('dragging'));
+            div.addEventListener('dragend', () => div.classList.remove('dragging'));
+          }
           container.appendChild(div);
         });
       });
