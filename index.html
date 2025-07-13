@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>QA Kanban learning</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -110,6 +112,9 @@
       cursor: pointer;
       font-size: 16px;
     }
+    .add-task-form {
+      margin-top: 10px;
+    }
     .add-task-form input,
     .add-task-form textarea {
       width: 100%;
@@ -130,6 +135,13 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 1em;
+    }
+    .task.dragging {
+      opacity: 0.5;
+    }
+    .drag-over {
+      background-color: #e0f7fa;
+      transition: background 0.3s;
     }
     .heart {
       position: fixed;
@@ -192,14 +204,14 @@
       startApp();
     }
 
-    const columns = ['todo', 'inProgress', 'done'];
-
     function startApp() {
       document.getElementById('login-container').style.display = 'none';
       document.getElementById('kanban-board').style.display = 'flex';
       renderColumns();
       loadTasks();
     }
+
+    const columns = ['todo', 'inProgress', 'done'];
 
     function renderColumns() {
       const board = document.getElementById('kanban-board');
@@ -286,7 +298,8 @@
             if (idMatch) {
               const taskId = idMatch[1];
               db.collection('tasks').doc(taskId).update({ status: col });
-              document.getElementById('dropSound').play().catch(()=>{});
+              const sound = document.getElementById('dropSound');
+              if (sound) sound.play().catch(()=>{});
             }
           }
         });
