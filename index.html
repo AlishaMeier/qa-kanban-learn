@@ -11,12 +11,16 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
+    html, body {
+      height: 100%;
+    }
     body {
       font-family: 'Nunito', sans-serif;
       background: linear-gradient(135deg, #fce4ec, #e1bee7, #b2ebf2);
       margin: 0;
       padding: 20px;
       overflow-x: hidden;
+      background-attachment: fixed;
     }
     h1 {
       text-align: center;
@@ -164,7 +168,6 @@
       }
     }
   </style>
-  <audio id="dropSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_58d20b4be5.mp3?filename=pop-94319.mp3"></audio>
 </head>
 <body>
   <div class="header-img">
@@ -172,11 +175,13 @@
   </div>
   <h1>🌙 QA Kanban learning 🌙</h1>
   <div id="login-container">
-    <input type="password" id="password" placeholder="Введите пароль для редактирования">
-    <button onclick="handleLogin()">Войти</button>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Пароль">
+    <button onclick="firebaseLogin()">Войти</button>
     <button onclick="continueAsGuest()">Я гость</button>
   </div>
   <div class="kanban" id="kanban-board" style="display: none;"></div>
+  <audio id="dropSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_58d20b4be5.mp3?filename=pop-94319.mp3"></audio>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDyuj-U-9_1YRywYdOMWPzY1iYdNXUm22w",
@@ -187,22 +192,22 @@
       appId: "1:1048329783698:web:31121f94345cf70a1b994b"
     };
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const passwordInput = document.getElementById('password');
-    const loginContainer = document.getElementById('login-container');
-    const board = document.getElementById('kanban-board');
-    const columns = ['todo', 'inProgress', 'done'];
     let isReadonly = true;
 
-    function handleLogin() {
-      const pwd = passwordInput.value.trim();
-      if (pwd === 'HeyDude6996)') {
-        isReadonly = false;
-        startApp();
-      } else {
-        alert('Неверный пароль');
-      }
+    function firebaseLogin() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          isReadonly = false;
+          startApp();
+        })
+        .catch(error => {
+          alert("Ошибка входа: " + error.message);
+        });
     }
 
     function continueAsGuest() {
@@ -211,99 +216,68 @@
     }
 
     function startApp() {
-      loginContainer.style.display = 'none';
-      board.style.display = 'flex';
-      renderColumns();
+      document.getElementById('login-container').style.display = 'none';
+      document.getElementById('kanban-board').style.display = 'flex';
       loadTasks();
     }
 
-    function renderColumns() {
-      board.innerHTML = '';
-      const titles = {
-        todo: '📥 Backlog',
-        inProgress: '🚧 In Progress',
-        done: '✅ Done'
-      };
-      columns.forEach(col => {
-        const div = document.createElement('div');
-        div.className = 'column';
-        div.id = col;
-        div.innerHTML = `
-          <h2>${titles[col]}</h2>
-          <div class="tasks"></div>
-          ${!isReadonly ? `
-          <form class="add-task-form">
-            <input type="text" placeholder="Заголовок" required />
-            <textarea placeholder="Описание"></textarea>
-            <button type="submit">Добавить</button>
-          </form>` : ''}
-        `;
-        board.appendChild(div);
-        if (!isReadonly) {
-          div.querySelector('form').addEventListener('submit', e => {
-            e.preventDefault();
-            const title = e.target.querySelector('input').value.trim();
-            const description = e.target.querySelector('textarea').value.trim();
-            if (title) {
-              db.collection('tasks').add({ title, description, status: col });
-              e.target.reset();
+    function loadTasks() {
+      db.collection("tasks").onSnapshot(snapshot => {
+        const board = document.getElementById('kanban-board');
+        board.innerHTML = '';
+        const columns = ['backlog', 'inProgress', 'done'];
+        const columnNames = {
+          backlog: '📥 Backlog',
+          inProgress: '⚙️ In Progress',
+          done: '✅ Done'
+        };
+        columns.forEach(status => {
+          const col = document.createElement('div');
+          col.className = 'column';
+          col.id = status;
+          col.innerHTML = `<h2>${columnNames[status]}</h2>`;
+          board.appendChild(col);
+        });
+        snapshot.forEach(doc => {
+          const task = doc.data();
+          const el = document.createElement('div');
+          el.className = 'task';
+          el.setAttribute('draggable', !isReadonly);
+          el.innerHTML = `<strong>${task.title}</strong><br><span>${task.description}</span>`;
+          if (!isReadonly) {
+            const del = document.createElement('div');
+            del.className = 'actions';
+            del.innerHTML = `<button onclick="deleteTask('${doc.id}')">🗑</button>`;
+            el.appendChild(del);
+          }
+          el.addEventListener('dragstart', e => {
+            if (!isReadonly) {
+              el.classList.add('dragging');
             }
           });
-        }
-      });
-    }
-
-    function loadTasks() {
-      db.collection('tasks').onSnapshot(snapshot => {
-        const data = {};
-        columns.forEach(col => data[col] = []);
-        snapshot.forEach(doc => {
-          const t = doc.data();
-          if (data[t.status]) data[t.status].push({ ...t, id: doc.id });
+          el.addEventListener('dragend', () => el.classList.remove('dragging'));
+          const column = document.getElementById(task.status);
+          if (column) column.appendChild(el);
         });
-        renderTasks(data);
+        setupDnD();
       });
-    }
-
-    function renderTasks(data) {
-      columns.forEach(col => {
-        const container = document.getElementById(col).querySelector('.tasks');
-        container.innerHTML = '';
-        data[col].forEach(task => {
-          const div = document.createElement('div');
-          div.className = 'task';
-          div.setAttribute('draggable', !isReadonly);
-          div.innerHTML = `
-            <strong>${task.title}</strong><br>
-            <span>${task.description}</span>
-            ${!isReadonly ? `<div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div>` : ''}
-          `;
-          div.addEventListener('dragstart', () => div.classList.add('dragging'));
-          div.addEventListener('dragend', () => div.classList.remove('dragging'));
-          container.appendChild(div);
-        });
-      });
-      if (!isReadonly) initDnD();
     }
 
     function deleteTask(id) {
-      db.collection('tasks').doc(id).delete();
+      if (!isReadonly) db.collection("tasks").doc(id).delete();
     }
 
-    function initDnD() {
-      columns.forEach(col => {
-        const zone = document.getElementById(col).querySelector('.tasks');
-        zone.addEventListener('dragover', e => e.preventDefault());
-        zone.addEventListener('drop', e => {
+    function setupDnD() {
+      document.querySelectorAll('.column').forEach(col => {
+        col.addEventListener('dragover', e => e.preventDefault());
+        col.addEventListener('drop', e => {
+          e.preventDefault();
           const dragging = document.querySelector('.dragging');
-          if (dragging) {
-            const idMatch = dragging.querySelector('.actions button')?.getAttribute('onclick')?.match(/'(.*?)'/);
-            if (idMatch) {
-              const taskId = idMatch[1];
-              db.collection('tasks').doc(taskId).update({ status: col });
-              const sound = document.getElementById('dropSound');
-              if (sound) sound.play().catch(()=>{});
-            }
+          if (!dragging || isReadonly) return;
+          const taskId = dragging.querySelector('button')?.getAttribute('onclick')?.match(/'(.+?)'/)?.[1];
+          if (taskId) {
+            db.collection("tasks").doc(taskId).update({ status: col.id });
+            document.getElementById('dropSound').play().catch(() => {});
           }
         });
       });
