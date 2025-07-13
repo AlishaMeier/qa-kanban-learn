@@ -10,7 +10,116 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <style>/* Стили как в текущем документе */</style>
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #fce4ec, #e1bee7, #b2ebf2);
+      margin: 0;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2em;
+      color: #4a4a4a;
+      margin-bottom: 20px;
+    }
+    .header-img {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .header-img img {
+      max-width: 200px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    #login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    #login-container input, #login-container button {
+      font-size: 1em;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .kanban {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .column {
+      background: #fff0f5;
+      border-radius: 12px;
+      padding: 15px;
+      width: 30%;
+      min-width: 280px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .column h2 {
+      text-align: center;
+    }
+    .add-task-form {
+      margin-top: 10px;
+    }
+    .add-task-form input,
+    .add-task-form textarea {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: vertical;
+      font-family: 'Nunito', sans-serif;
+    }
+    .add-task-form button {
+      width: 100%;
+      padding: 8px;
+      background-color: #f06292;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .task {
+      background: white;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .task.dragging {
+      opacity: 0.5;
+    }
+    .drag-over {
+      background-color: #e0f7fa;
+      transition: background 0.3s;
+    }
+    .actions {
+      text-align: right;
+      margin-top: 5px;
+    }
+    .heart {
+      position: fixed;
+      top: 0;
+      animation: fall 8s linear forwards;
+      z-index: 999;
+      pointer-events: none;
+    }
+    @keyframes fall {
+      to {
+        transform: translateY(100vh);
+        opacity: 0;
+      }
+    }
+  </style>
   <audio id="dropSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_58d20b4be5.mp3?filename=pop-94319.mp3"></audio>
 </head>
 <body>
