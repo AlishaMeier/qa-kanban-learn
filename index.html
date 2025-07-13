@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>QA Kanban learning</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <style>
     body {
       font-family: 'Nunito', sans-serif;
@@ -104,130 +106,108 @@
     .readonly [draggable="true"] {
       display: none !important;
     }
+    #login-container {
+      max-width: 300px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    #login-container input {
+      width: calc(100% - 20px);
+      margin: 10px 0;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #login-container button {
+      padding: 10px 20px;
+      background: #f06292;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
   </style>
   <audio id="dropSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_58d20b4be5.mp3?filename=pop-94319.mp3"></audio>
 </head>
 <body>
-  <script>
-    const password = prompt("Введите пароль для редактирования страницы:");
-    const correctPassword = "HeyDude6996";
-    if (password !== correctPassword) {
-      document.body.classList.add("readonly");
-    }
-  </script>
-  <h1>QA Kanban learning</h1>
-  <div class="header-img">
-    <img src="https://i.gifer.com/9P3h.gif" alt="Chi Anime">
+  <div id="login-container">
+    <h2>Вход</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Пароль">
+    <button onclick="login()">Войти</button>
+    <button onclick="guestAccess()">Я гость</button>
   </div>
-  <div class="kanban">
-    <div class="column" id="todo">
-      <h2>📥 Backlog</h2>
-      <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
-        <input type="text" class="task-title" placeholder="Заголовок">
-        <textarea class="task-desc" placeholder="Описание"></textarea>
-        <button type="submit">Добавить</button>
-      </form>
+
+  <div id="app" style="display:none">
+    <h1>QA Kanban learning</h1>
+    <div class="header-img">
+      <img src="https://i.gifer.com/9P3h.gif" alt="Chi Anime">
     </div>
-    <div class="column" id="inProgress">
-      <h2>🚧 In Progress</h2>
-      <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
-        <input type="text" class="task-title" placeholder="Заголовок">
-        <textarea class="task-desc" placeholder="Описание"></textarea>
-        <button type="submit">Добавить</button>
-      </form>
-    </div>
-    <div class="column" id="done">
-      <h2>✅ Done</h2>
-      <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
-        <input type="text" class="task-title" placeholder="Заголовок">
-        <textarea class="task-desc" placeholder="Описание"></textarea>
-        <button type="submit">Добавить</button>
-      </form>
+    <div class="kanban">
+      <div class="column" id="todo">
+        <h2>📥 Backlog</h2>
+        <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
+          <input type="text" class="task-title" placeholder="Заголовок">
+          <textarea class="task-desc" placeholder="Описание"></textarea>
+          <button type="submit">Добавить</button>
+        </form>
+      </div>
+      <div class="column" id="inProgress">
+        <h2>🚧 In Progress</h2>
+        <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
+          <input type="text" class="task-title" placeholder="Заголовок">
+          <textarea class="task-desc" placeholder="Описание"></textarea>
+          <button type="submit">Добавить</button>
+        </form>
+      </div>
+      <div class="column" id="done">
+        <h2>✅ Done</h2>
+        <form class="add-task-form" onsubmit="event.preventDefault(); addTaskToColumn(this.querySelector('button'))">
+          <input type="text" class="task-title" placeholder="Заголовок">
+          <textarea class="task-desc" placeholder="Описание"></textarea>
+          <button type="submit">Добавить</button>
+        </form>
+      </div>
     </div>
   </div>
+
   <script>
-    function addTaskToColumn(button) {
-      if (document.body.classList.contains('readonly')) return;
-      const form = button.closest('.add-task-form');
-      const titleInput = form.querySelector('.task-title');
-      const descInput = form.querySelector('.task-desc');
-      const title = titleInput.value.trim();
-      const desc = descInput.value.trim();
-      if (!title || !desc) return alert('Введите заголовок и описание');
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyuj-U-9_1YRywYdOMWPzY1iYdNXUm22w",
+      authDomain: "qa-kanban.firebaseapp.com",
+      projectId: "qa-kanban",
+      storageBucket: "qa-kanban.firebasestorage.app",
+      messagingSenderId: "1048329783698",
+      appId: "1:1048329783698:web:31121f94345cf70a1b994b",
+      measurementId: "G-RDRWM37YW4"
+    };
 
-      const column = form.closest('.column');
-      const columnId = column.id;
-      let gif = '';
-      if (columnId === 'todo') gif = 'https://i.gifer.com/Pvxp.gif';
-      else if (columnId === 'inProgress') gif = 'https://i.gifer.com/9P3h.gif';
-      else if (columnId === 'done') gif = 'https://i.gifer.com/OiwA.gif';
+    firebase.initializeApp(firebaseConfig);
 
-      const task = document.createElement('div');
-      task.className = 'task';
-      task.setAttribute('draggable', 'true');
-      task.addEventListener('dragstart', dragTask);
-      task.addEventListener('dragend', () => task.classList.remove('dragging'));
-      task.innerHTML = `
-        <div class="actions"><button onclick="this.parentElement.parentElement.remove()">🗑️</button></div>
-        <img src="${gif}" alt="icon" style="width:32px;height:32px;border-radius:50%;float:left;margin-right:8px;">
-        <strong>${title}</strong>
-        <p>${desc}</p>
-      `;
-      task.classList.add('dragging');
-      form.parentElement.appendChild(task);
-      setTimeout(() => task.classList.remove('dragging'), 50);
-      titleInput.value = '';
-      descInput.value = '';
-    }
-
-    function dragTask(event) {
-      if (document.body.classList.contains('readonly')) return;
-      event.dataTransfer.setData('text/plain', event.target.outerHTML);
-      event.target.classList.add('dragging');
-      setTimeout(() => event.target.style.display = 'none', 0);
-    }
-
-    function dropTask(event, columnId) {
-      event.preventDefault();
-      if (document.body.classList.contains('readonly')) return;
-      const data = event.dataTransfer.getData('text/plain');
-      const column = document.getElementById(columnId);
-      column.classList.remove('drag-over');
-      const temp = document.createElement('div');
-      temp.innerHTML = data;
-      const task = temp.firstChild;
-      task.setAttribute('draggable', 'true');
-      task.addEventListener('dragstart', dragTask);
-      task.addEventListener('dragend', () => task.classList.remove('dragging'));
-      task.style.display = '';
-      column.appendChild(task);
-
-      const sound = document.getElementById('dropSound');
-      if (sound) {
-        sound.currentTime = 0;
-        sound.play().catch(() => {});
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
       }
-    }
-
-    document.querySelectorAll('.column').forEach(col => {
-      col.addEventListener('dragover', e => {
-        e.preventDefault();
-        if (document.body.classList.contains('readonly')) return;
-        col.classList.add('drag-over');
-      });
-      col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
-      col.addEventListener('drop', e => dropTask(e, col.id));
     });
 
-    setInterval(() => {
-      const heart = document.createElement('div');
-      heart.className = 'heart';
-      heart.innerText = '💜';
-      heart.style.left = Math.random() * 100 + 'vw';
-      heart.style.animationDuration = 8 + Math.random() * 4 + 's';
-      document.body.appendChild(heart);
-      setTimeout(() => heart.remove(), 9000);
-    }, 800);
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .catch(err => alert('Ошибка входа: ' + err.message));
+    }
+
+    function guestAccess() {
+      document.getElementById('login-container').style.display = 'none';
+      const app = document.getElementById('app');
+      app.style.display = 'block';
+      app.classList.add('readonly');
+    }
   </script>
 </body>
 </html>
