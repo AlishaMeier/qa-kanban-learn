@@ -20,6 +20,16 @@
       text-align: center;
       color: #f06292;
     }
+    .header-img {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .header-img img {
+      max-width: 200px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
     .kanban {
       display: flex;
       justify-content: center;
@@ -33,6 +43,7 @@
       width: 300px;
       min-height: 200px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
     }
     .column.drag-over {
       border: 2px dashed violet;
@@ -44,19 +55,23 @@
       border-radius: 6px;
       border-left: 5px solid #f06292;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      position: relative;
     }
     .task.dragging {
       opacity: 0.5;
       transform: rotate(2deg);
       box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
-    .add-task-form input, .add-task-form textarea, .add-task-form button {
+    .add-task-form input,
+    .add-task-form textarea,
+    .add-task-form button {
       display: block;
       width: 100%;
       margin: 5px 0;
       padding: 8px;
       font-family: inherit;
       font-size: 1em;
+      box-sizing: border-box;
     }
     .add-task-form button {
       background: #f06292;
@@ -89,6 +104,9 @@
 </head>
 <body>
   <h1>QA Kanban learning</h1>
+  <div class="header-img">
+    <img src="https://i.gifer.com/9P3h.gif" alt="Chi Anime">
+  </div>
   <div class="kanban">
     <div class="column" id="todo">
       <h2>📥 Backlog</h2>
