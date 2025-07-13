@@ -288,11 +288,12 @@
         new Sortable(el, {
           group: 'kanban-tasks',
           animation: 150,
-          onAdd: function (evt) {
-            const taskId = evt.item.id;
-            const newStatus = evt.to.closest('.column').id;
-            if (taskId && newStatus) {
-              db.collection('tasks').doc(taskId).update({ status: newStatus });
+          onEnd: function (evt) {
+            const itemEl = evt.item;
+            const newCol = itemEl.closest('.column').id;
+            const taskId = itemEl.id;
+            if (taskId && newCol) {
+              db.collection('tasks').doc(taskId).update({ status: newCol });
               const sound = document.getElementById('dropSound');
               if (sound) sound.play().catch(() => {});
             }
