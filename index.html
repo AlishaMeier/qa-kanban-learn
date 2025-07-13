@@ -218,66 +218,100 @@
     function startApp() {
       document.getElementById('login-container').style.display = 'none';
       document.getElementById('kanban-board').style.display = 'flex';
+      renderColumns();
       loadTasks();
     }
 
-    function loadTasks() {
-      db.collection("tasks").onSnapshot(snapshot => {
-        const board = document.getElementById('kanban-board');
-        board.innerHTML = '';
-        const columns = ['backlog', 'inProgress', 'done'];
-        const columnNames = {
-          backlog: '📥 Backlog',
-          inProgress: '⚙️ In Progress',
-          done: '✅ Done'
-        };
-        columns.forEach(status => {
-          const col = document.createElement('div');
-          col.className = 'column';
-          col.id = status;
-          col.innerHTML = `<h2>${columnNames[status]}</h2>`;
-          board.appendChild(col);
-        });
-        snapshot.forEach(doc => {
-          const task = doc.data();
-          const el = document.createElement('div');
-          el.className = 'task';
-          el.setAttribute('draggable', !isReadonly);
-          el.innerHTML = `<strong>${task.title}</strong><br><span>${task.description}</span>`;
-          if (!isReadonly) {
-            const del = document.createElement('div');
-            del.className = 'actions';
-            del.innerHTML = `<button onclick="deleteTask('${doc.id}')">🗑</button>`;
-            el.appendChild(del);
-          }
-          el.addEventListener('dragstart', e => {
-            if (!isReadonly) {
-              el.classList.add('dragging');
+    const columns = ['todo', 'inProgress', 'done'];
+
+    function renderColumns() {
+      const board = document.getElementById('kanban-board');
+      board.innerHTML = '';
+      const titles = {
+        todo: '📥 Backlog',
+        inProgress: '🚧 In Progress',
+        done: '✅ Done'
+      };
+      columns.forEach(col => {
+        const div = document.createElement('div');
+        div.className = 'column';
+        div.id = col;
+        div.innerHTML = `
+          <h2>${titles[col]}</h2>
+          <div class="tasks"></div>
+          ${!isReadonly ? `
+          <form class="add-task-form">
+            <input type="text" placeholder="Заголовок" required />
+            <textarea placeholder="Описание"></textarea>
+            <button type="submit">Добавить</button>
+          </form>` : ''}
+        `;
+        board.appendChild(div);
+        if (!isReadonly) {
+          div.querySelector('form').addEventListener('submit', e => {
+            e.preventDefault();
+            const title = e.target.querySelector('input').value.trim();
+            const description = e.target.querySelector('textarea').value.trim();
+            if (title) {
+              db.collection('tasks').add({ title, description, status: col });
+              e.target.reset();
             }
           });
-          el.addEventListener('dragend', () => el.classList.remove('dragging'));
-          const column = document.getElementById(task.status);
-          if (column) column.appendChild(el);
-        });
-        setupDnD();
+        }
       });
     }
 
-    function deleteTask(id) {
-      if (!isReadonly) db.collection("tasks").doc(id).delete();
+    function loadTasks() {
+      db.collection('tasks').onSnapshot(snapshot => {
+        const data = {};
+        columns.forEach(col => data[col] = []);
+        snapshot.forEach(doc => {
+          const t = doc.data();
+          if (data[t.status]) data[t.status].push({ ...t, id: doc.id });
+        });
+        renderTasks(data);
+      });
     }
 
-    function setupDnD() {
-      document.querySelectorAll('.column').forEach(col => {
-        col.addEventListener('dragover', e => e.preventDefault());
-        col.addEventListener('drop', e => {
-          e.preventDefault();
+    function renderTasks(data) {
+      columns.forEach(col => {
+        const container = document.getElementById(col).querySelector('.tasks');
+        container.innerHTML = '';
+        data[col].forEach(task => {
+          const div = document.createElement('div');
+          div.className = 'task';
+          div.setAttribute('draggable', !isReadonly);
+          div.innerHTML = `
+            <strong>${task.title}</strong><br>
+            <span>${task.description}</span>
+            ${!isReadonly ? `<div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div>` : ''}
+          `;
+          div.addEventListener('dragstart', () => div.classList.add('dragging'));
+          div.addEventListener('dragend', () => div.classList.remove('dragging'));
+          container.appendChild(div);
+        });
+      });
+      if (!isReadonly) initDnD();
+    }
+
+    function deleteTask(id) {
+      db.collection('tasks').doc(id).delete();
+    }
+
+    function initDnD() {
+      columns.forEach(col => {
+        const zone = document.getElementById(col).querySelector('.tasks');
+        zone.addEventListener('dragover', e => e.preventDefault());
+        zone.addEventListener('drop', e => {
           const dragging = document.querySelector('.dragging');
-          if (!dragging || isReadonly) return;
-          const taskId = dragging.querySelector('button')?.getAttribute('onclick')?.match(/'(.+?)'/)?.[1];
-          if (taskId) {
-            db.collection("tasks").doc(taskId).update({ status: col.id });
-            document.getElementById('dropSound').play().catch(() => {});
+          if (dragging) {
+            const idMatch = dragging.querySelector('.actions button')?.getAttribute('onclick')?.match(/'(.*?)'/);
+            if (idMatch) {
+              const taskId = idMatch[1];
+              db.collection('tasks').doc(taskId).update({ status: col });
+              const sound = document.getElementById('dropSound');
+              if (sound) sound.play().catch(()=>{});
+            }
           }
         });
       });
