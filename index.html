@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
     html, body { height: 100%; }
     body {
@@ -233,7 +234,7 @@
         `;
         board.appendChild(div);
         if (!isReadonly) {
-          div.querySelector('form').addEventListener('submit', e => {
+          div.querySelector('form')?.addEventListener('submit', e => {
             e.preventDefault();
             const title = e.target.querySelector('input').value.trim();
             const description = e.target.querySelector('textarea').value.trim();
@@ -271,14 +272,6 @@
             <span>${task.description}</span>
             ${!isReadonly ? `<div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div>` : ''}
           `;
-          if (!isReadonly) {
-            div.setAttribute('draggable', 'true');
-            div.addEventListener('dragstart', e => {
-              e.dataTransfer.setData('text/plain', task.id);
-              div.classList.add('dragging');
-            });
-            div.addEventListener('dragend', () => div.classList.remove('dragging'));
-          }
           container.appendChild(div);
         });
       });
@@ -291,15 +284,19 @@
 
     function initDnD() {
       columns.forEach(col => {
-        const zone = document.getElementById(col).querySelector('.tasks');
-        zone.addEventListener('dragover', e => e.preventDefault());
-        zone.addEventListener('drop', e => {
-          e.preventDefault();
-          const taskId = e.dataTransfer.getData('text/plain');
-          if (taskId) {
-            db.collection('tasks').doc(taskId).update({ status: col });
-            const sound = document.getElementById('dropSound');
-            if (sound) sound.play().catch(() => {});
+        const el = document.getElementById(col).querySelector('.tasks');
+        new Sortable(el, {
+          group: 'kanban-tasks',
+          animation: 150,
+          onEnd: async (evt) => {
+            const itemEl = evt.item;
+            const newCol = itemEl.closest('.column').id;
+            const taskId = itemEl.id;
+            if (taskId) {
+              await db.collection('tasks').doc(taskId).update({ status: newCol });
+              const sound = document.getElementById('dropSound');
+              if (sound) sound.play().catch(() => {});
+            }
           }
         });
       });
