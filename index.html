@@ -224,7 +224,7 @@
         div.id = col;
         div.innerHTML = `
           <h2>${titles[col]}</h2>
-          <div class="tasks"></div>
+          <div class="tasks" id="${col}-tasks"></div>
           ${!isReadonly ? `
           <form class="add-task-form">
             <input type="text" placeholder="Заголовок" required />
@@ -261,7 +261,7 @@
 
     function renderTasks(data) {
       columns.forEach(col => {
-        const container = document.getElementById(col).querySelector('.tasks');
+        const container = document.getElementById(`${col}-tasks`);
         container.innerHTML = '';
         data[col].forEach(task => {
           const div = document.createElement('div');
@@ -284,16 +284,15 @@
 
     function initDnD() {
       columns.forEach(col => {
-        const el = document.getElementById(col).querySelector('.tasks');
+        const el = document.getElementById(`${col}-tasks`);
         new Sortable(el, {
           group: 'kanban-tasks',
           animation: 150,
-          onEnd: async (evt) => {
-            const itemEl = evt.item;
-            const newCol = itemEl.closest('.column').id;
-            const taskId = itemEl.id;
-            if (taskId) {
-              await db.collection('tasks').doc(taskId).update({ status: newCol });
+          onAdd: function (evt) {
+            const taskId = evt.item.id;
+            const newStatus = evt.to.closest('.column').id;
+            if (taskId && newStatus) {
+              db.collection('tasks').doc(taskId).update({ status: newStatus });
               const sound = document.getElementById('dropSound');
               if (sound) sound.play().catch(() => {});
             }
