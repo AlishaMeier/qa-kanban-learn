@@ -276,7 +276,11 @@
             ${!isReadonly ? `<div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div>` : ''}
           `;
           if (!isReadonly) {
-            div.addEventListener('dragstart', () => div.classList.add('dragging'));
+            div.addEventListener('dragstart', (e) => {
+  e.dataTransfer.setData("text/plain", task.id); // <- важно!
+  div.classList.add('dragging');
+});
+
             div.addEventListener('dragend', () => div.classList.remove('dragging'));
           }
           container.appendChild(div);
@@ -289,25 +293,6 @@
       db.collection('tasks').doc(id).delete();
     }
 
-    function initDnD() {
-      columns.forEach(col => {
-        const zone = document.getElementById(col).querySelector('.tasks');
-        zone.addEventListener('dragover', e => e.preventDefault());
-        zone.addEventListener('drop', e => {
-          const dragging = document.querySelector('.dragging');
-          if (dragging) {
-            const idMatch = dragging.querySelector('.actions button')?.getAttribute('onclick')?.match(/'(.*?)'/);
-            if (idMatch) {
-              const taskId = idMatch[1];
-              db.collection('tasks').doc(taskId).update({ status: col });
-              const sound = document.getElementById('dropSound');
-              if (sound) sound.play().catch(()=>{});
-            }
-          }
-        });
-      });
-    }
-
     setInterval(() => {
       const heart = document.createElement('div');
       heart.className = 'heart';
@@ -317,6 +302,33 @@
       document.body.appendChild(heart);
       setTimeout(() => heart.remove(), 8000);
     }, 800);
+    
+  function initDnD() {
+      columns.forEach(col => {
+        const zone = document.getElementById(col).querySelector('.tasks');
+        zone.addEventListener('dragover', e => e.preventDefault());
+        zone.addEventListener('dragenter', e => {
+          if (!isReadonly) zone.classList.add('drag-over');
+        });
+        zone.addEventListener('dragleave', e => {
+          zone.classList.remove('drag-over');
+        });
+        zone.addEventListener('drop', e => {
+          e.preventDefault();
+          const dragging = document.querySelector('.dragging');
+          if (dragging && !isReadonly) {
+            const idMatch = dragging.querySelector('.actions button')?.getAttribute('onclick')?.match(/'(.*?)'/);
+            if (idMatch) {
+              const taskId = idMatch[1];
+              db.collection('tasks').doc(taskId).update({ status: col });
+              const sound = document.getElementById('dropSound');
+              if (sound) sound.play().catch(() => {});
+            }
+          }
+          zone.classList.remove('drag-over');
+        });
+      });
+    }
   </script>
 </body>
 </html>
