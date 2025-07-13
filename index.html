@@ -99,10 +99,22 @@
       0% { transform: translateY(0) rotate(0deg); opacity: 1; }
       100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
     }
+    .readonly .add-task-form,
+    .readonly .actions,
+    .readonly [draggable="true"] {
+      display: none !important;
+    }
   </style>
   <audio id="dropSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_58d20b4be5.mp3?filename=pop-94319.mp3"></audio>
 </head>
 <body>
+  <script>
+    const password = prompt("Введите пароль для редактирования страницы:");
+    const correctPassword = "HeyDude6996";
+    if (password !== correctPassword) {
+      document.body.classList.add("readonly");
+    }
+  </script>
   <h1>QA Kanban learning</h1>
   <div class="header-img">
     <img src="https://i.gifer.com/9P3h.gif" alt="Chi Anime">
@@ -135,6 +147,7 @@
   </div>
   <script>
     function addTaskToColumn(button) {
+      if (document.body.classList.contains('readonly')) return;
       const form = button.closest('.add-task-form');
       const titleInput = form.querySelector('.task-title');
       const descInput = form.querySelector('.task-desc');
@@ -168,6 +181,7 @@
     }
 
     function dragTask(event) {
+      if (document.body.classList.contains('readonly')) return;
       event.dataTransfer.setData('text/plain', event.target.outerHTML);
       event.target.classList.add('dragging');
       setTimeout(() => event.target.style.display = 'none', 0);
@@ -175,6 +189,7 @@
 
     function dropTask(event, columnId) {
       event.preventDefault();
+      if (document.body.classList.contains('readonly')) return;
       const data = event.dataTransfer.getData('text/plain');
       const column = document.getElementById(columnId);
       column.classList.remove('drag-over');
@@ -197,6 +212,7 @@
     document.querySelectorAll('.column').forEach(col => {
       col.addEventListener('dragover', e => {
         e.preventDefault();
+        if (document.body.classList.contains('readonly')) return;
         col.classList.add('drag-over');
       });
       col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
