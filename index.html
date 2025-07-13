@@ -40,12 +40,19 @@
       align-items: center;
       gap: 10px;
       margin-bottom: 30px;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 20px;
+      background-color: #ffffffcc;
+      border-radius: 12px;
     }
     #login-container input, #login-container button {
       font-size: 1em;
       padding: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
+      width: 100%;
     }
     .kanban {
       display: flex;
@@ -60,9 +67,47 @@
       width: 30%;
       min-width: 280px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease-in-out;
+    }
+    .column:hover {
+      transform: scale(1.01);
     }
     .column h2 {
       text-align: center;
+      color: #4a4a4a;
+    }
+    .task {
+      background: #fff;
+      border-left: 5px solid #f06292;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: grab;
+      position: relative;
+      transition: background 0.3s ease;
+    }
+    .task:hover {
+      background: #ffe4ec;
+    }
+    .task .actions {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      display: flex;
+      gap: 5px;
+    }
+    .task button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .task input, .task textarea {
+      width: 100%;
+      border: none;
+      background: transparent;
+      resize: none;
+      font-size: 0.95em;
     }
     .add-task-form {
       margin-top: 10px;
@@ -87,13 +132,6 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 1em;
-    }
-    .task {
-      background: white;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .task.dragging {
       opacity: 0.5;
@@ -128,38 +166,13 @@
   </div>
   <h1>QA Kanban learning</h1>
   <div id="login-container">
-    <input type="password" id="password" placeholder="Введите пароль">
-    <button onclick="login()">Войти</button>
-    <button onclick="enterAsGuest()">Я гость</button>
+    <input type="password" id="password" placeholder="Введите пароль для редактирования">
+    <button onclick="handleLogin()">Войти</button>
+    <button onclick="continueAsGuest()">Я гость</button>
   </div>
-  <div class="kanban" style="display:none">
-    <div class="column" id="todo">
-      <h2>📥 Backlog</h2>
-      <form class="add-task-form">
-        <input type="text" placeholder="Заголовок" required>
-        <textarea placeholder="Описание"></textarea>
-        <button type="submit">Добавить</button>
-      </form>
-    </div>
-    <div class="column" id="inProgress">
-      <h2>🚧 In Progress</h2>
-      <form class="add-task-form">
-        <input type="text" placeholder="Заголовок" required>
-        <textarea placeholder="Описание"></textarea>
-        <button type="submit">Добавить</button>
-      </form>
-    </div>
-    <div class="column" id="done">
-      <h2>✅ Done</h2>
-      <form class="add-task-form">
-        <input type="text" placeholder="Заголовок" required>
-        <textarea placeholder="Описание"></textarea>
-        <button type="submit">Добавить</button>
-      </form>
-    </div>
-  </div>
+  <div id="kanban-board" style="display: none;"></div>
   <script>
-    const firebaseConfig = {
+        const firebaseConfig = {
       apiKey: "AIzaSyDyuj-U-9_1YRywYdOMWPzY1iYdNXUm22w",
       authDomain: "qa-kanban.firebaseapp.com",
       projectId: "qa-kanban",
