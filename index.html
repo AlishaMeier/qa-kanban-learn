@@ -11,9 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
-    html, body {
-      height: 100%;
-    }
+    html, body { height: 100%; }
     body {
       font-family: 'Nunito', sans-serif;
       background: linear-gradient(135deg, #fce4ec, #e1bee7, #b2ebf2);
@@ -136,9 +134,7 @@
       cursor: pointer;
       font-size: 1em;
     }
-    .task.dragging {
-      opacity: 0.5;
-    }
+    .task.dragging { opacity: 0.5; }
     .drag-over {
       background-color: #e0f7fa;
       transition: background 0.3s;
@@ -226,9 +222,10 @@
         div.className = 'column';
         div.id = col;
         div.innerHTML = `
-          <h2>${titles[col]}</h2>
-          <div class="tasks"></div>
-          ${!isReadonly ? `
+  <strong>${task.title}</strong><br>
+  <span>${task.description}</span>
+  ${!isReadonly ? `<div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div>` : ''}
+`;
           <form class="add-task-form">
             <input type="text" placeholder="Заголовок" required />
             <textarea placeholder="Описание"></textarea>
@@ -269,66 +266,40 @@
         data[col].forEach(task => {
           const div = document.createElement('div');
           div.className = 'task';
-          div.setAttribute('draggable', !isReadonly);
-          div.innerHTML = `
-            <strong>${task.title}</strong><br>
-            <span>${task.description}</span>
-            ${!isReadonly ? `<div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div>` : ''}
-          `;
           if (!isReadonly) {
-            div.addEventListener('dragstart', (e) => {
-  e.dataTransfer.setData("text/plain", task.id); // <- важно!
-  div.classList.add('dragging');
-});
-
+            div.setAttribute('draggable', 'true');
+            div.addEventListener('dragstart', e => {
+              e.dataTransfer.setData('text/plain', task.id);
+              div.classList.add('dragging');
+            });
             div.addEventListener('dragend', () => div.classList.remove('dragging'));
           }
+          div.innerHTML = 
+            <strong>${task.title}</strong><br>
+            <span>${task.description}</span>
+            ${!isReadonly ? <div class="actions"><button onclick="deleteTask('${task.id}')">🗑</button></div> : ''}
+          ;
           container.appendChild(div);
         });
       });
       if (!isReadonly) initDnD();
     }
 
-    function deleteTask(id) {
-      db.collection('tasks').doc(id).delete();
-    }
-
-    setInterval(() => {
-      const heart = document.createElement('div');
-      heart.className = 'heart';
-      heart.innerText = '💜';
-      heart.style.left = Math.random() * 100 + 'vw';
-      heart.style.fontSize = (10 + Math.random() * 10) + 'px';
-      document.body.appendChild(heart);
-      setTimeout(() => heart.remove(), 8000);
-    }, 800);
-    
-  function initDnD() {
+    function initDnD() {
       columns.forEach(col => {
         const zone = document.getElementById(col).querySelector('.tasks');
         zone.addEventListener('dragover', e => e.preventDefault());
-        zone.addEventListener('dragenter', e => {
-          if (!isReadonly) zone.classList.add('drag-over');
-        });
-        zone.addEventListener('dragleave', e => {
-          zone.classList.remove('drag-over');
-        });
         zone.addEventListener('drop', e => {
           e.preventDefault();
-          const dragging = document.querySelector('.dragging');
-          if (dragging && !isReadonly) {
-            const idMatch = dragging.querySelector('.actions button')?.getAttribute('onclick')?.match(/'(.*?)'/);
-            if (idMatch) {
-              const taskId = idMatch[1];
-              db.collection('tasks').doc(taskId).update({ status: col });
-              const sound = document.getElementById('dropSound');
-              if (sound) sound.play().catch(() => {});
-            }
+          const taskId = e.dataTransfer.getData('text/plain');
+          if (taskId) {
+            db.collection('tasks').doc(taskId).update({ status: col });
+            const sound = document.getElementById('dropSound');
+            if (sound) sound.play().catch(() => {});
           }
-          zone.classList.remove('drag-over');
         });
       });
-    }
+    } 
   </script>
 </body>
 </html>
