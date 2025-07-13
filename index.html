@@ -170,9 +170,18 @@
     <button onclick="handleLogin()">Войти</button>
     <button onclick="continueAsGuest()">Я гость</button>
   </div>
-  <div id="kanban-board" style="display: none;"></div>
+  <div id="kanban-board" style="display: none;">
+    <div class="kanban">
+      <div class="column" id="todo"><h2>📥 Backlog</h2></div>
+      <div class="column" id="inProgress"><h2>⚙️ In Progress</h2></div>
+      <div class="column" id="done"><h2>✅ Done</h2></div>
+    </div>
+  </div>
   <script>
-        const firebaseConfig = {
+    function handleLogin() { login(); }
+    function continueAsGuest() { enterAsGuest(); }
+
+    const firebaseConfig = {
       apiKey: "AIzaSyDyuj-U-9_1YRywYdOMWPzY1iYdNXUm22w",
       authDomain: "qa-kanban.firebaseapp.com",
       projectId: "qa-kanban",
@@ -181,12 +190,13 @@
       appId: "1:1048329783698:web:31121f94345cf70a1b994b",
       measurementId: "G-RDRWM37YW4"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     const passwordInput = document.getElementById('password');
     const loginContainer = document.getElementById('login-container');
-    const kanbanBoard = document.querySelector('.kanban');
+    const kanbanBoard = document.getElementById('kanban-board');
     let isReadonly = true;
 
     function login() {
@@ -206,10 +216,7 @@
 
     function startApp() {
       loginContainer.style.display = 'none';
-      kanbanBoard.style.display = 'flex';
-      if (isReadonly) {
-        document.body.classList.add('readonly');
-      }
+      kanbanBoard.style.display = 'block';
       initBoard();
     }
 
@@ -222,18 +229,6 @@
           data[task.status].push({ ...task, id: doc.id });
         });
         renderBoard(data);
-      });
-
-      document.querySelectorAll('.add-task-form').forEach(form => {
-        form.addEventListener('submit', e => {
-          e.preventDefault();
-          if (isReadonly) return;
-          const title = form.querySelector('input').value.trim();
-          const description = form.querySelector('textarea').value.trim();
-          const status = form.closest('.column').id;
-          db.collection("tasks").add({ title, description, status });
-          form.reset();
-        });
       });
     }
 
